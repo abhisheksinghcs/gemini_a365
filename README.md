@@ -10,6 +10,10 @@ backend. Microsoft capabilities are layered on around it.
 > **Status:** Phase 0 (scaffold) and Phase 1 (baseline Gemini agent) are
 > implemented. Later phases are documented in the build plan and added
 > incrementally.
+>
+> **Branches:** `main` holds the clean **before** (baseline Gemini agent, zero
+> Microsoft dependencies). The `a365-integration` branch holds the **after**
+> (Agent 365 applied) so the demo can show a real before/after.
 
 ## Architecture
 
@@ -98,12 +102,12 @@ keeps a real before/after.
 
 | Phase | Deliverable |
 | --- | --- |
-| 2 | Register in Agent 365 (Entra Agent ID blueprint + identity, S2S). |
+| 2 | Register in Agent 365 ([Entra Agent ID blueprint + identity, S2S](docs/PHASE2_REGISTRATION.md)). |
 | 3 | Observability — OpenTelemetry → Agent 365 (`microsoft-opentelemetry`). |
-| 4 | Work IQ governed tooling (optional). |
+| 4 | Work IQ governed tooling (optional; needs OBO — see [DEFERRED.md](docs/DEFERRED.md)). |
 | 5 | Threat protection — Microsoft Defender detections + Advanced Hunting (KQL). |
 | 6 | Governance controls + **controls test matrix** (`docs/CONTROLS_TEST_MATRIX.md`). |
-| 7 | Deploy to Vertex AI Agent Engine (**deferred** — docs only). |
+| 7 | Deploy to Vertex AI Agent Engine (**deferred** — [docs only](docs/DEFERRED.md)). |
 | A | Purview DLP (**optional appendix** — docs only). |
 
 ## Licensing

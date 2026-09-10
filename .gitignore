@@ -13,6 +13,10 @@ venv/
 # uv
 .uv/
 
+# ADK runtime artifacts (adk web/api_server session store)
+.adk/
+*.session.db
+
 # Environment / secrets — never commit
 .env
 security_agent/.env
