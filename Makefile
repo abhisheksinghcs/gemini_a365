@@ -16,7 +16,7 @@ help: ## Show this help
 .PHONY: setup
 setup: ## Install toolchain (brew) + sync Python deps (uv)
 	@command -v brew >/dev/null || { echo "Homebrew required: https://brew.sh"; exit 1; }
-	brew install uv gh azure-cli dotnet-sdk
+	brew bundle --no-upgrade
 	uv sync --extra dev
 
 .PHONY: run-web
@@ -39,28 +39,40 @@ test: ## Run the pytest smoke suite
 
 .PHONY: a365-validate
 a365-validate: ## (Phase 2/3) Run the a365-code-validator skill flow
-	@echo "Run the a365-code-validator skill, then: a365 validate  (see docs/)"
+	@echo "No 'a365 validate' subcommand exists — run the a365-code-validator skill (ask: 'validate my a365 code'). See docs/."; exit 1
 
 .PHONY: telemetry-check
 telemetry-check: ## (Phase 3) Check the OpenTelemetry exporter health
-	@test -f scripts/telemetry_check.py \
-		&& uv run python scripts/telemetry_check.py \
-		|| echo "Not yet implemented — added in Phase 3."
+	@if [ ! -f .env ]; then echo "Copy .env.example to .env first"; exit 1; fi
+	@if [ -f scripts/telemetry_check.py ]; then \
+		uv run --env-file .env python scripts/telemetry_check.py; \
+	else \
+		echo "Not yet implemented — added in Phase 3."; exit 1; \
+	fi
 
 .PHONY: attack-run
 attack-run: ## (Phase 5) Run the full adversarial corpus
-	@test -f attacks/run.py \
-		&& uv run python attacks/run.py \
-		|| echo "Not yet implemented — added in Phase 5."
+	@if [ ! -f .env ]; then echo "Copy .env.example to .env first"; exit 1; fi
+	@if [ -f attacks/run.py ]; then \
+		uv run --env-file .env python attacks/run.py; \
+	else \
+		echo "Not yet implemented — added in Phase 5."; exit 1; \
+	fi
 
 .PHONY: attack-known
 attack-known: ## (Phase 5) Run ONLY the operator-supplied known trigger
-	@test -f attacks/run.py \
-		&& uv run python attacks/run.py --only known-trigger \
-		|| echo "Not yet implemented — added in Phase 5."
+	@if [ ! -f .env ]; then echo "Copy .env.example to .env first"; exit 1; fi
+	@if [ -f attacks/run.py ]; then \
+		uv run --env-file .env python attacks/run.py --only known-trigger; \
+	else \
+		echo "Not yet implemented — added in Phase 5."; exit 1; \
+	fi
 
 .PHONY: attack-show
 attack-show: ## (Phase 5) Print/copy the known trigger for manual paste
-	@test -f attacks/run.py \
-		&& uv run python attacks/run.py --show-trigger \
-		|| echo "Not yet implemented — added in Phase 5."
+	@if [ ! -f .env ]; then echo "Copy .env.example to .env first"; exit 1; fi
+	@if [ -f attacks/run.py ]; then \
+		uv run --env-file .env python attacks/run.py --show-trigger | tee /dev/tty | pbcopy; \
+	else \
+		echo "Not yet implemented — added in Phase 5."; exit 1; \
+	fi
