@@ -101,6 +101,10 @@ because the SDK never grants permissions silently:
 > Action for the operator: when we run the dry run, paste its permission list
 > back here so this file becomes the authoritative record for the demo.
 
+> **Recorded 2026-09-10:** see [Result](#result--executed-2026-09-10). The S2S
+> app role (`Agent365.Observability.OtelWrite`) was granted out-of-band via
+> Azure CLI (`az rest`) and is now **assigned**.
+
 ## Prerequisites
 
 | Requirement | Detail |
@@ -126,6 +130,62 @@ tenant state (blueprint creation, admin consent). Concretely:
    approval** before applying.
 5. Apply → `a365.generated.config.json` is written. Record the blueprint ID,
    agent identity ID, and the granted permissions back into this doc.
+
+## Result — executed 2026-09-10
+
+Registration ran via `a365 setup all --agent-name gemini-secagent --authmode s2s
+--skip-requirements` (the `--skip-requirements` flag is required in this
+environment — see [Known issue](#known-issue-nugetorg-blocked-by-it) below).
+
+Created (concrete GUIDs live in the git-ignored `a365.generated.config.json` and
+root `.env`, which are the source of truth — kept out of this committed doc):
+
+| Artifact | Name | Status |
+| --- | --- | --- |
+| Blueprint application | `gemini-secagent Blueprint` | ✅ created |
+| Blueprint service principal | — | ✅ created |
+| Blueprint scope | `access_agent_as_user` | ✅ added |
+| Blueprint client secret | — | ✅ created (stored in `.env`; **rotated after exposure**) |
+| Agent identity | `gemini-secagent Identity` | ✅ created |
+| Agent registration | `gemini-secagent Agent` | ✅ registered — visible in the catalog |
+| Sponsor / Owner | the signing-in admin user | ✅ set |
+| Messaging endpoint | — | ⏭️ skipped (non-M365 agent) |
+
+### Observability app-role grant — ✅ granted (was pending)
+
+The S2S app-role assignment **`Agent365.Observability.OtelWrite`** on the
+Observability API (`appId 9b975845-388f-4429-889e-eab1ef63949c`) initially failed
+with **HTTP 403 `Authorization_RequestDenied`** — the a365 CLI's delegated token
+lacked rights to assign app roles. This grant is **required for Phase 3 telemetry**.
+
+It was completed out-of-band with **Azure CLI** (no PowerShell needed) by an
+admin whose signed-in token can create app-role assignments:
+
+```zsh
+# Resolve the Observability API SP + role, then assign it to the agent identity SP
+OBS_APP_ID=9b975845-388f-4429-889e-eab1ef63949c
+OBS_SP_ID=$(az ad sp show --id $OBS_APP_ID --query id -o tsv)
+ROLE_ID=$(az ad sp show --id $OBS_APP_ID \
+  --query "appRoles[?value=='Agent365.Observability.OtelWrite'].id | [0]" -o tsv)
+az rest --method POST \
+  --uri "https://graph.microsoft.com/v1.0/servicePrincipals/<AGENT_SP_ID>/appRoleAssignments" \
+  --body "{\"principalId\":\"<AGENT_SP_ID>\",\"resourceId\":\"$OBS_SP_ID\",\"appRoleId\":\"$ROLE_ID\"}"
+```
+
+Verified with `GET .../servicePrincipals/<AGENT_SP_ID>/appRoleAssignments`. The
+concrete `<AGENT_SP_ID>` is in `a365.generated.config.json`. The PowerShell path
+(`Connect-MgGraph` + `New-MgServicePrincipalAppRoleAssignment`) that the CLI
+prints is equivalent for environments that have PowerShell 7.
+
+### Known issue — nuget.org blocked by IT
+
+`a365 setup all`'s **prerequisites** step calls `api.nuget.org` directly, which
+this tenant's IT content filter blocks; the call hangs and setup stalls. All
+local NuGet configs already route to the org proxy
+(`packagefeedproxy.microsoft.io/nuget`), but the CLI reaches nuget.org outside
+NuGet source resolution. **Workaround:** pass `--skip-requirements` (the rest of
+setup does not need nuget.org). Longer-term: have IT allowlist `api.nuget.org`
+for the dev machine, or run the one-time registration from an unfiltered network.
 
 ## The separate no-code path (deferred)
 

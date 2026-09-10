@@ -40,3 +40,5 @@ attacks/private/
 # Editor
 .vscode/
 .idea/
+
+setup_app_msgs.txt
