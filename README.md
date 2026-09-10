@@ -109,7 +109,7 @@ keeps a real before/after.
 | Phase | Deliverable |
 | --- | --- |
 | 2 | Register in Agent 365 ([Entra Agent ID blueprint + identity, S2S](docs/PHASE2_REGISTRATION.md)). |
-| 3 | Observability — OpenTelemetry → Agent 365 ([telemetry contract](docs/TELEMETRY.md)). |
+| 3 | Observability — OpenTelemetry → Agent 365 ([plain-English explainer](docs/how-agent-telemetry-works.md) · [telemetry contract](docs/TELEMETRY.md)). |
 | 4 | Work IQ governed tooling (optional; needs OBO — see [DEFERRED.md](docs/DEFERRED.md)). |
 | 5 | Threat protection — Microsoft Defender detections + Advanced Hunting (KQL). |
 | 6 | Governance controls + **controls test matrix** (`docs/CONTROLS_TEST_MATRIX.md`). |
