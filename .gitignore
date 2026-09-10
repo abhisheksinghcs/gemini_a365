@@ -8,3 +8,31 @@ wheels/
 
 # Virtual environments
 .venv
+venv/
+
+# uv
+.uv/
+
+# Environment / secrets — never commit
+.env
+security_agent/.env
+*.env.local
+
+# Agent 365 generated config / secrets
+a365.config.json
+a365.generated.config.json
+.a365-workspace-detection.local.json
+
+# Operator-supplied adversarial material (never commit)
+attacks/private/
+
+# Google service-account keys (never commit)
+*service-account*.json
+*gcp*key*.json
+
+# macOS
+.DS_Store
+
+# Editor
+.vscode/
+.idea/
