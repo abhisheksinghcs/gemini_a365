@@ -45,3 +45,7 @@ attacks/runs/
 .idea/
 
 setup_app_msgs.txt
+
+# private working notes — not for the public repo
+docs/STATUS.md
+.github/copilot-instructions.md
