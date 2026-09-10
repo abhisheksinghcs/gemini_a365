@@ -112,7 +112,7 @@ keeps a real before/after.
 | 3 | Observability — OpenTelemetry → Agent 365 ([plain-English explainer](docs/how-agent-telemetry-works.md) · [telemetry contract](docs/TELEMETRY.md)). |
 | 4 | Work IQ governed tooling (optional; needs OBO — see [DEFERRED.md](docs/DEFERRED.md)). |
 | 5 | Threat protection — Microsoft Defender detections + Advanced Hunting ([Defender guide](docs/DEFENDER.md)). |
-| 6 | Governance controls + **controls test matrix** (`docs/CONTROLS_TEST_MATRIX.md`). |
+| 6 | Governance controls + [controls test matrix](docs/CONTROLS_TEST_MATRIX.md). |
 | 7 | Deploy to Vertex AI Agent Engine (**deferred** — [docs only](docs/DEFERRED.md)). |
 | A | Purview DLP (**optional appendix** — docs only). |
 

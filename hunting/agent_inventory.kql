@@ -1,8 +1,8 @@
-// Hunting query 1 — this agent's inventory row.
-// Fill AgentId from a365.generated.config.json (field: agenticAppId).
-// Table: AgentsInfo (Defender AI agent inventory). Column names vary by tenant
-// schema — pack_all() searches every field so this works regardless.
-let AgentId = "<AGENT_ID>";
+// Hunting query 1 — this agent's inventory row (latest snapshot).
+// Fill TargetAgentId from a365.generated.config.json (field: agenticAppId).
+// AgentsInfo stores multiple snapshots per agent; arg_max returns the latest.
+let TargetAgentId = "<AGENT_ID>";
 AgentsInfo
-| where tostring(pack_all()) has AgentId
-| take 50
+| where AgentId == TargetAgentId
+| summarize arg_max(Timestamp, *) by AgentId
+| where LifecycleStatus != "Deleted"
