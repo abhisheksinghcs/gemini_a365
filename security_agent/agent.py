@@ -22,7 +22,7 @@ load_dotenv(Path(__file__).parent / ".env")
 
 # Pin a concrete model ID (not a *-latest alias) so the same config resolves
 # later on regional Vertex AI endpoints.
-MODEL_ID = os.environ.get("GEMINI_MODEL", "gemini-2.5-flash")
+MODEL_ID = os.environ.get("GEMINI_MODEL", "gemini-3.5-flash")
 
 # Default fixture for fetch_url — a local file, never the open internet.
 _FIXTURE_DIR = Path(__file__).parent / "fixtures"
