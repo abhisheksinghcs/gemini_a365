@@ -53,11 +53,59 @@ invocation                                  (ADK root)
 
 ## Where it lands
 
+Spans leave the process on **one** path (the Agent 365 service). A second network
+call you'll see in debug logs is unrelated self-telemetry, and a third path
+(your own Azure Monitor) is available as an opt-in.
+
+### 1. Your spans → Agent 365 service → Microsoft security surfaces
+
+The exporter POSTs to
+`https://agent365.svc.cloud.microsoft/observabilityService/tenants/<tenant>/otlp/agents/<agentId>/traces`
+and the 200 response lists the sinks it fanned to — observed:
+`flashpoint`, `sentinel`, `esp`. Those feed:
+
 | Surface | Table / view |
 | --- | --- |
 | M365 admin center | the agent's **Activity** page |
 | Defender advanced hunting — activity | `CloudAppEvents` (tool executions, inference) |
 | Defender advanced hunting — inventory | `AgentsInfo` |
+| Defender advanced hunting — detections | `AlertInfo` / `AlertEvidence` (Phase 5) |
+
+The `sentinel` sink is why the XDR/Defender tables populate — you do **not** point
+the agent at Log Analytics/Sentinel yourself; the A365 service does the fan-out.
+
+### 2. `applicationinsights.azure.com//v2.1/track` → Statsbeat (NOT your data)
+
+You'll see a `POST …applicationinsights.azure.com//v2.1/track` in debug logs.
+That is **Statsbeat** — the distro's own SDK health/usage self-telemetry to a
+**Microsoft-owned** App Insights (spans-exported counts, success rates). It
+carries **no agent/business content** and does not go to any resource you own
+(there's no `APPLICATIONINSIGHTS_CONNECTION_STRING` in `.env`; the distro's
+`_sdkstats` module targets the well-known statsbeat endpoint). Ignore it.
+
+### 3. Optional — mirror your spans to your own App Insights / Log Analytics
+
+To *also* get a KQL view of the raw spans **outside** Defender (in your own
+Application Insights / Log Analytics workspace), pass an Azure Monitor connection
+string to the distro — the spans then export as standard Azure Monitor
+traces/dependencies/requests **in addition** to the A365 path:
+
+```python
+use_microsoft_opentelemetry(
+    enable_a365=True,
+    a365_enable_observability_exporter=True,
+    a365_use_s2s_endpoint=True,
+    a365_token_resolver=_resolver,
+    azure_monitor_connection_string="InstrumentationKey=...;IngestionEndpoint=https://<region>.in.applicationinsights.azure.com/",
+)
+```
+
+Get the connection string from your App Insights resource (Overview →
+*Connection String*). This is **not enabled** here — the S2S lab is
+Defender-focused — but it's a one-line add if you want Log Analytics/KQL access
+to the spans. Keep the connection string in `.env` (git-ignored), e.g.
+`APPLICATIONINSIGHTS_CONNECTION_STRING=...`.
+
 
 ## Configuration (root `.env`)
 
