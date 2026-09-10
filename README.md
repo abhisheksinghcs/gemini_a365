@@ -14,6 +14,10 @@ backend. Microsoft capabilities are layered on around it.
 > **Branches:** `main` holds the clean **before** (baseline Gemini agent, zero
 > Microsoft dependencies). The `a365-integration` branch holds the **after**
 > (Agent 365 applied) so the demo can show a real before/after.
+>
+> **Running this yourself?** Read [docs/OPERATOR_NOTES.md](docs/OPERATOR_NOTES.md)
+> first — gotchas, secrets hygiene, and when to use Skills vs the CLI vs manual
+> steps.
 
 ## Architecture
 
