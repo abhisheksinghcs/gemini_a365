@@ -81,6 +81,13 @@ explain**, then **you** run the provisioning command.
 - If you get `404 NOT_FOUND … no longer available to new users`, the model ID
   retired; list current ones: `client.models.list()` filtered on
   `generateContent`.
+- **Free-tier quota is tiny — 20 requests/day _per model_** (429
+  `RESOURCE_EXHAUSTED`). A single tool-calling turn is ~2 requests, so tests +
+  telemetry checks exhaust it fast. It's a **quota limit, not a bug** — the
+  telemetry wiring still passes. Each model has its own budget, so switch to a
+  fresh one to keep working: `GEMINI_MODEL=gemini-3.6-flash make telemetry-check`.
+  `telemetry-check` detects 429 and reports it as INCONCLUSIVE (exit 2), not a
+  telemetry failure.
 
 ### ADK Web is dev-only
 - If port 8000 is taken (macOS AirPlay Receiver holds 5000/7000; other dev

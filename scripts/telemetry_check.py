@@ -63,20 +63,27 @@ async def _run_turn() -> None:
         pass
 
 
-def _run_turn_with_retry(attempts: int = 3) -> bool:
-    """Run one turn; retry transient model errors. Returns True on success."""
+def _run_turn_with_retry(attempts: int = 3) -> str:
+    """Run one turn. Returns 'ok', 'quota', or 'error'.
+
+    Daily-quota (429 RESOURCE_EXHAUSTED) is not retried — retrying just burns
+    more of the free-tier budget and can't succeed until it resets.
+    """
     for i in range(1, attempts + 1):
         try:
             asyncio.run(_run_turn())
-            return True
-        except Exception as exc:  # transient model 503s, etc.
+            return "ok"
+        except Exception as exc:
             msg = str(exc)
-            transient = "503" in msg or "UNAVAILABLE" in msg or "429" in msg
+            if "RESOURCE_EXHAUSTED" in msg or "429" in msg:
+                print("  Gemini free-tier quota exhausted (429 RESOURCE_EXHAUSTED).")
+                return "quota"
+            transient = "503" in msg or "UNAVAILABLE" in msg
             print(f"  turn attempt {i}/{attempts} failed: {msg[:120]}")
             if not (transient and i < attempts):
-                return False
+                return "error"
             time.sleep(4 * i)
-    return False
+    return "error"
 
 
 def _has_attr(span, *keys: str) -> bool:
@@ -90,8 +97,19 @@ def main() -> int:
         return 1
 
     exporter = _attach_memory_exporter()
-    turn_ok = _run_turn_with_retry()
-    if not turn_ok:
+    turn_status = _run_turn_with_retry()
+    if turn_status == "quota":
+        print(
+            "\nINCONCLUSIVE: Gemini free-tier daily quota is exhausted for this model,\n"
+            "so the agent turn couldn't run — this is NOT a telemetry failure.\n"
+            "Retry tomorrow, or use a model with remaining quota, e.g.:\n"
+            "    GEMINI_MODEL=gemini-3.6-flash make telemetry-check\n"
+        )
+        # Still report the token check, then exit non-zero (gate not satisfied).
+        token_ready = bool(token_cache.get_cached_token(config.AGENT_ID, config.TENANT_ID))
+        print(f"[{'PASS' if token_ready else 'FAIL'}] (a) S2S observability token acquired")
+        return 2
+    if turn_status != "ok":
         print("WARN: the agent turn did not complete (model unavailable?) — "
               "token check still runs, but the span-tree checks will fail.\n")
     spans = exporter.get_finished_spans()
