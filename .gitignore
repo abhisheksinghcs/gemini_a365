@@ -30,6 +30,9 @@ a365.generated.config.json
 # Operator-supplied adversarial material (never commit)
 attacks/private/
 
+# Phase 5 attack run artifacts (agent responses, session ids)
+attacks/runs/
+
 # Google service-account keys (never commit)
 *service-account*.json
 *gcp*key*.json

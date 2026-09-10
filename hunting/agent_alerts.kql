@@ -1,0 +1,10 @@
+// Hunting query 3 — alerts + evidence tied to this agent.
+// Join AlertInfo (title, category, severity) with AlertEvidence (the entities,
+// including the triggering prompt snippet when prompt evidence is enabled).
+// Fill AgentId from a365.generated.config.json (field: agenticAppId).
+let AgentId = "<AGENT_ID>";
+AlertEvidence
+| where tostring(pack_all()) has AgentId
+| join kind=inner AlertInfo on AlertId
+| project Timestamp, Title, Category, Severity, ServiceSource, DetectionSource, AlertId, EntityType
+| sort by Timestamp desc

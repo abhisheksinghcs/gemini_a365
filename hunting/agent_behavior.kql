@@ -1,0 +1,10 @@
+// Hunting query 4 — real-time protection / behavior events for this agent, if any.
+// BehaviorInfo captures behavior-analytics signals; may be empty if no
+// runtime-protection events fired for an SDK-integrated third-party agent.
+// Fill AgentId from a365.generated.config.json (field: agenticAppId).
+let AgentId = "<AGENT_ID>";
+BehaviorInfo
+| where Timestamp > ago(24h)
+| where tostring(pack_all()) has AgentId
+| project Timestamp, ActionType, Categories, Description, ServiceSource
+| sort by Timestamp desc

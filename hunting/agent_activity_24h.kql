@@ -1,0 +1,9 @@
+// Hunting query 2 — all activity for this agent in the last 24h.
+// Tool executions and inference calls surface here via the A365 -> sentinel sink.
+// Fill AgentId from a365.generated.config.json (field: agenticAppId).
+let AgentId = "<AGENT_ID>";
+CloudAppEvents
+| where Timestamp > ago(24h)
+| where RawEventData has AgentId
+| project Timestamp, ActionType, Application, AccountDisplayName, RawEventData
+| sort by Timestamp desc
