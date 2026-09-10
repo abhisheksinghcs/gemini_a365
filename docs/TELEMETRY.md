@@ -2,7 +2,7 @@
 
 How this Gemini/ADK agent emits Agent 365 observability, what spans it produces,
 and how to verify them. Auth mode is **S2S** (see
-[PHASE2_REGISTRATION.md](PHASE2_REGISTRATION.md)).
+[how-agent-registration-works.md](how-agent-registration-works.md)).
 
 ## What Phase 3 adds
 

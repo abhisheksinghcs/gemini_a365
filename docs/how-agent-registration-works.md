@@ -187,6 +187,31 @@ NuGet source resolution. **Workaround:** pass `--skip-requirements` (the rest of
 setup does not need nuget.org). Longer-term: have IT allowlist `api.nuget.org`
 for the dev machine, or run the one-time registration from an unfiltered network.
 
+## Registration vs. Publish (why the agent shows up without `a365 publish`)
+
+A common confusion: the agent appears in the M365 admin center **registry**
+(Agents → All agents) with an **Activity** page after `a365 setup all` alone —
+no `a365 publish` needed. These are two different things:
+
+| | Comes from | Produces |
+| --- | --- | --- |
+| **Registration** | `a365 setup all` (its "Agent Registration" step) | The agent listed in **Agents → All agents** + its **Activity** page. |
+| **Publish** | `a365 publish` → `manifest.zip` → admin upload | An installable **Teams / M365 app** users can add and chat with. |
+
+- The CLI's own `publish --use-blueprint` help says it plainly:
+  *"Registration is handled by `a365 setup all`."* Our Setup Summary showed the
+  step: `6. Agent Registration  registered  'gemini-secagent Agent'`.
+- `a365 publish` only *"updates the ID values in `manifest.json` and creates a
+  `manifest.zip` package for uploading to the Microsoft 365 admin center"* — i.e.
+  it packages a **Teams/M365 app**. It needs a `manifest.json` and a messaging
+  endpoint, which a **standard S2S agent doesn't have** (our Phase 2 skipped the
+  messaging endpoint: *"Messaging endpoint: skipped (non-M365 agent)"*).
+
+So registry visibility + telemetry (Phases 2–3) never need `publish`. You only
+run `publish` on the **AI-Teammate branch** (iteration 3), where the agent gains
+a hosting layer + messaging endpoint and becomes a Teams/Copilot app people can
+install.
+
 ## The separate no-code path (deferred)
 
 There is a **second, unrelated** way to get the Gemini agent into the Agent 365

@@ -2,7 +2,7 @@
 
 Hard-won lessons from wiring this Gemini-native (Google ADK) agent into Microsoft
 Agent 365. Read this before running the setup yourself — it will save you the
-detours we took. Companion docs: [PHASE2_REGISTRATION.md](PHASE2_REGISTRATION.md)
+detours we took. Companion docs: [how-agent-registration-works.md](how-agent-registration-works.md)
 (the registration plan + recorded result) and [DEFERRED.md](DEFERRED.md).
 
 ---

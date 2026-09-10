@@ -10,7 +10,7 @@ attempting them.
 ## 1. Google Vertex AI registry sync (no-code inventory)
 
 A **separate path** from the SDK registration in
-[PHASE2_REGISTRATION.md](PHASE2_REGISTRATION.md). Registry sync imports agents
+[how-agent-registration-works.md](how-agent-registration-works.md). Registry sync imports agents
 from an external platform into the Agent 365 registry for **centralized
 visibility only**.
 
@@ -89,4 +89,4 @@ Not GCP-dependent, but deferred for a different reason: Work IQ MCP requires a
 **delegated (OBO) user token**, which the S2S baseline does not have. Enabling it
 means registering an **OBO** variant of the agent and a Global Administrator
 granting the Work IQ permissions (`a365 setup permissions mcp`). See the S2S vs
-OBO comparison in [PHASE2_REGISTRATION.md](PHASE2_REGISTRATION.md).
+OBO comparison in [how-agent-registration-works.md](how-agent-registration-works.md).
