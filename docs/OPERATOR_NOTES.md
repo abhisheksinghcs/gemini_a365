@@ -178,8 +178,61 @@ Even with everything wired correctly, telemetry is dropped **silently** unless:
 
 ---
 
-## Branch strategy for before/after demos
+## Observability (Phase 3) gotchas
 
-- `main` = the **before** (baseline Gemini agent, zero Microsoft dependencies).
-- `a365-integration` = the **after** (Agent 365 applied).
-Keep A365 commits on the integration branch so you can show a clean before/after.
+- **The reference's `uv` override pin is stale.** `instrument-observability`'s
+  Python reference tells you to pin `opentelemetry-sdk>=1.38,<1.39` for Google
+  ADK projects. That was for an **older ADK** — **ADK 2.8 requires OTel ≥1.39**
+  (`opentelemetry-sdk>=1.39,<=1.42.1`), and current `microsoft-opentelemetry`
+  (1.3.9) also wants ≥1.39. Applying the `<1.39` pin makes `uv sync` **fail** as
+  unsatisfiable. **Fix: don't add the override at all** — default resolution
+  installs a compatible OTel (1.40) that satisfies both.
+- **Use the unified distro only.** `microsoft-opentelemetry`, imported as
+  `from microsoft.opentelemetry import use_microsoft_opentelemetry`. Do **not**
+  add legacy `microsoft-agents-a365-observability-*` packages or call
+  `*Instrumentor().instrument()` — that produces duplicate spans.
+- **ADK has no Agents-SDK host**, so the reference's `TurnContext` /
+  `ObservabilityHostingManager` wiring doesn't apply. Adaptation that works under
+  `adk web` / `adk api_server` / Agent Engine:
+  - bootstrap `use_microsoft_opentelemetry(...)` **before** importing `google.adk`
+    (in `security_agent/__init__.py`);
+  - run the S2S token service on a **daemon thread** with its own event loop
+    (no aiohttp startup hook to attach to);
+  - open `InvokeAgentScope` in `before_agent_callback`, close it in
+    `after_agent_callback` on the root agent (same task → inference/tool spans
+    nest correctly).
+- **`a365_use_s2s_endpoint=True` is mandatory for S2S** — else the exporter posts
+  to the OBO endpoint and 401s.
+- **Local dev uses client-secret FMI** (`AGENT365_USE_MANAGED_IDENTITY=false`);
+  managed identity only exists on Azure. The 3-hop chain works from macOS.
+- **Benign noise:** `No module named 'agents'` (distro probing the OpenAI Agents
+  SDK we don't use) and an MSAL static-`client_assertion` `DeprecationWarning`.
+- **Gemini can 503 ("high demand")** transiently — `telemetry-check` retries.
+- **Verification is client-side.** `make telemetry-check` proves the span tree +
+  token; the Activity page also needs a tenant user with an **E7 / Agent 365**
+  license or telemetry is dropped silently even on HTTP 200.
+
+---
+
+## Branch strategy — three iterations
+
+This repo is built as three progressive, demo-able iterations:
+
+| Branch | Iteration | Identity / auth | Demonstrates |
+| --- | --- | --- | --- |
+| `main` | **1. Plain ADK agent** | none (Gemini only) | the "before" — zero Microsoft dependencies |
+| `a365-integration` | **2. S2S agent** | blueprint + **S2S** | observability → threat protection → governance |
+| *future* (`ai-teammate`) | **3. AI Teammate** | agentic-user / **OBO** + Work IQ | Teams + Copilot delivery, on-behalf-of user data |
+
+- Iteration **2 stays S2S only** — it matches the telemetry/threat/governance
+  lab, and Work IQ (Phase 4) is genuinely unavailable on S2S, so that capability
+  is deferred to iteration 3 by design (not as a compromise).
+- Iteration **3 branches from `a365-integration`**, inheriting all observability
+  /threat/governance work, then adds the hosting layer (CEA or AI Teammate),
+  OBO/agentic-user auth, and Work IQ. The clean diff is the "what it takes to
+  become a Teammate" story.
+- **AI Teammate needs the Frontier preview program** (agent user account +
+  mailbox). Without it, the **CEA** (a bot users chat with, `a365 setup all
+  --m365`) is the no-preview fallback for Teams/Copilot delivery.
+- To add OBO to an existing S2S blueprint later (idempotent):
+  `a365 setup all --agent-name gemini-secagent --authmode both --skip-requirements`.

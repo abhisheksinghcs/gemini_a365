@@ -11,9 +11,11 @@ backend. Microsoft capabilities are layered on around it.
 > implemented. Later phases are documented in the build plan and added
 > incrementally.
 >
-> **Branches:** `main` holds the clean **before** (baseline Gemini agent, zero
-> Microsoft dependencies). The `a365-integration` branch holds the **after**
-> (Agent 365 applied) so the demo can show a real before/after.
+> **Branches (three iterations):** `main` = the **before** (baseline Gemini
+> agent, zero Microsoft dependencies); `a365-integration` = the **S2S agent**
+> (observability/threat/governance lab); a future branch = **AI Teammate** with
+> Teams + Copilot delivery (OBO + Work IQ). See
+> [docs/OPERATOR_NOTES.md](docs/OPERATOR_NOTES.md#branch-strategy--three-iterations).
 >
 > **Running this yourself?** Read [docs/OPERATOR_NOTES.md](docs/OPERATOR_NOTES.md)
 > first — gotchas, secrets hygiene, and when to use Skills vs the CLI vs manual
@@ -107,7 +109,7 @@ keeps a real before/after.
 | Phase | Deliverable |
 | --- | --- |
 | 2 | Register in Agent 365 ([Entra Agent ID blueprint + identity, S2S](docs/PHASE2_REGISTRATION.md)). |
-| 3 | Observability — OpenTelemetry → Agent 365 (`microsoft-opentelemetry`). |
+| 3 | Observability — OpenTelemetry → Agent 365 ([telemetry contract](docs/TELEMETRY.md)). |
 | 4 | Work IQ governed tooling (optional; needs OBO — see [DEFERRED.md](docs/DEFERRED.md)). |
 | 5 | Threat protection — Microsoft Defender detections + Advanced Hunting (KQL). |
 | 6 | Governance controls + **controls test matrix** (`docs/CONTROLS_TEST_MATRIX.md`). |

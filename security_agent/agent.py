@@ -17,6 +17,11 @@ from pathlib import Path
 from dotenv import load_dotenv
 from google.adk.agents import Agent
 
+from observability.adk_instrumentation import (  # A365 Observability — best-effort instrumentation
+    after_agent,
+    before_agent,
+)
+
 # Load security_agent/.env if present so GOOGLE_API_KEY / model config resolve.
 load_dotenv(Path(__file__).parent / ".env")
 
@@ -152,4 +157,6 @@ root_agent = Agent(
         "Never invent customer data; only report what the tools return."
     ),
     tools=[lookup_security_topic, get_customer_record, fetch_url],
+    before_agent_callback=before_agent,  # A365 Observability — best-effort instrumentation
+    after_agent_callback=after_agent,  # A365 Observability — best-effort instrumentation
 )
