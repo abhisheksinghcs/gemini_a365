@@ -3,6 +3,51 @@
 # A365 auth mode: S2S — 3-hop FMI token chain (direct HTTP POST + MSAL)
 #   Hop 1+2: Blueprint (MSI or client secret) → T1 via token endpoint POST + fmi_path → Agent Identity
 #   Hop 3:   Agent Identity uses T1 as assertion → Observability API token
+"""Mints and refreshes the S2S access token the A365 exporter uses.
+
+The Phase 3 OpenTelemetry exporter attaches an access token to every POST to the
+Agent 365 observability service. This agent runs service-to-service (no signed-in
+user), so there is no user token to borrow — this module obtains one from the
+agent's own credentials via the **Federated Managed Identity (FMI) 3-hop chain**
+and keeps it fresh.
+
+Why 3 hops
+----------
+An agent identity can't be authenticated directly; it's reached by exchanging the
+blueprint's credentials through an FMI path::
+
+    Blueprint (client secret [local] or Managed Identity [Azure])
+      │  Hop 1+2: POST the token endpoint with scope=api://AzureADTokenExchange/.default
+      │           and fmi_path=<agentId>   → T1 (the Agent Identity's token)
+      ▼
+    Agent Identity
+      │  Hop 3: MSAL client-credentials using T1 as a client_assertion,
+      │         scope=api://9b975845-388f-4429-889e-eab1ef63949c/.default
+      ▼
+    Observability API token   → cached for the exporter to read per export
+
+Public API
+----------
+- ``acquire_initial_token(...)`` — run the chain once at startup (token ready
+  before the first turn).
+- ``run_token_service(...)`` — background loop; re-runs the chain every 50 min
+  (tokens live ~60 min). Started on a daemon thread by ``bootstrap.py``.
+
+Data flow
+---------
+This module writes the final token to ``token_cache`` (thread-safe, in-memory);
+``bootstrap._resolver`` reads it back on each export. Nothing here talks to the
+exporter directly.
+
+Notes
+-----
+- **Hop 1+2 is a raw ``httpx`` POST** because MSAL Python does not yet support
+  the ``fmi_path`` parameter (see ``_acquire_t1_via_client_secret``).
+- Local dev uses the **client secret** (``AGENT365_USE_MANAGED_IDENTITY=false``);
+  on Azure set it ``true`` to use ``ManagedIdentityCredential`` instead.
+- The scaffold originates from the ``instrument-observability`` skill's Python
+  reference and is kept close to verbatim so it tracks upstream changes.
+"""
 
 import asyncio
 import logging
